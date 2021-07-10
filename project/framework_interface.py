@@ -7,6 +7,14 @@ cl = ["│", "─", "┌", "┬", "┐", "├", "┼", "┤", "└", "┴", "┘
 BLANK_LINES = 50
 print(term.home +  term.clear + term.move_y(term.height // 2))
 
+def printhelp(header, textl):
+    retstring = ""
+    retstring += str(cl[2] + cl[1] + f" /{header}/ " + cl[1]*int(46-len(header)) + cl[4]) + "\n"
+    for words in textl:
+        retstring += str(cl[0] + " " + words + " "*int(50 - len(words)) + cl[0] + "\n")
+    retstring += str(cl[8] + cl[1]*51 + cl[10])
+    return(retstring)
+    
 def list_files(startpath):
     print(term.green_on_black('┌─ /System/ ─────────────────────────────────────┐'))
     for root, dirs, files in walk(startpath):
