@@ -1,5 +1,7 @@
 # FILE ENCRYPTION LIBRARY - DEVELOPED BY CHEERFUL CHEETAHS (Contributed by Coder400, [PUT YOUR NAME HERE])
 import string
+from fs_file import File
+from fs_filesystemusageexample import User
 
 #Create our table of all characters.
 ALL_CHARACTERS = string.ascii_letters+string.digits+string.punctuation+string.whitespace
@@ -23,15 +25,8 @@ def caesar_cipher(characters, msg, shift, reverse=False):
     #Return the encrypted message
     return encrypted_msg
 
-
-# Function to edit current hash. (HIGHLY RECOMMENDED)
-def editHash(newHash):
-    global HASH
-    HASH = newHash
-
-
 # Calculate the value of our hash.
-def getHashValue():
+def getHashValue(password):
     # Initialise our value to 0.
     value = 0
     for character in password:
@@ -41,13 +36,12 @@ def getHashValue():
 
 
 #Get bytearray from file.
-def generate_Bytearray(filename):
-    file = open(filename, 'rb')
+def generate_Bytearray(file, user):
     #Convert our bytes into a byte array.
-    data = bytearray(file.read())
-    file.close()
+    data = bytearray(file.read(user, True))
     return data
 
+#encrypt the bits using xor
 def modify(byte_array, password):
     for pos,byte in enumerate(byte_array):
         #Go into each pos and run XOR on current byte and our HASH
@@ -55,50 +49,31 @@ def modify(byte_array, password):
     return byte_array
 
 # Function to encrypt/decrypt files for the OS. (We only need 1 function because of XOR cipher)
-def modifyFile(filename, password):
-    #Get our bytes to work with and then modify them.
-    data_bytes = modify(generate_Bytearray(filename), password)
-
-def modify(byte_array):
-    for pos, byte in enumerate(byte_array):
-        # Go into each pos and run XOR on current byte and our HASH
-        byte_array[pos] = XOR(byte, HASH)
-    return byte_array
-
-
-# Function to encrypt/decrypt files for the OS. (We only need 1 function because of XOR cipher)
-def modifyFile(filename):
+def modifyFile(file, user, password):
     # Get our bytes to work with and then modify them.
-    data_bytes = modify(generate_Bytearray(filename))
-    file = open(filename, 'wb')
-    file.truncate()
-    file.write(data_bytes)
-    file.close()
+    data_bytes = modify(generate_Bytearray(file, user), password)
+    #file.truncate()
 
-def openFile(filename, shift, password):
+def openFile(file, user, shift, password):
     global ALL_CHARACTERS
     #Get decrypted bytes.
-    data_bytes = modify(generate_Bytearray(filename), password)
+    data_bytes = modify(generate_Bytearray(file, user), password)
     #Decode our message from bytes to a readable format.
     msg = data_bytes.decode('utf-8')
     #Decrypt the message retrieved.
     msg = caesar_cipher(ALL_CHARACTERS, msg, shift, reverse=True)
     return msg
 
-def writeFile(filename, msg, shift, password):
+def writeFile(file, user, msg, shift, password):
     global ALL_CHARACTERS
     #Create file on our system.
-    file = open(filename, 'x')
-    file.close()
-    file = open(filename, 'wb')
+    file.create()
     #Add caesar cipher to the msg
     msg = caesar_cipher(ALL_CHARACTERS, msg, shift)
     #Convert our message into bytes
     msg = bytes(msg, 'utf-8')
     msg = bytearray(msg)
     #Write bytes into file and then close.
-    file.write(msg)
-    file.close()
+    file.write(user, msg, True)
     #Encrypt our file.
-    modifyFile(filename, password)
-
+    modifyFile(file, user, password)
