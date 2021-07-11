@@ -25,6 +25,7 @@ if __name__ == "__main__":
     printstart("""So, dont waste your time, think smarter not harder, and good luck!""")
     gameloads("*Title* Starting,")
     gameloads("Gaining System Access,")
+    print(term.home + term.clear + term.move_y(term.height // 2))
     for _ in range(10):
        print(term.green_on_black("-"*_ + "_"*int(_ - 10) + "  " + str(_*10) + "%"))
        time.sleep(0.2)
