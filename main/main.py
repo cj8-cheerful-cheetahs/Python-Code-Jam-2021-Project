@@ -224,9 +224,8 @@ def start_quickcrypt(user_input):
 
 
 def start_search(user_input):
-    # only searches for the first word after "search"
     user_input = user_input.split()
-    search_word = user_input[1]
+    search_word = " ".join(user_input[1:])
     search_here = walk(START_PATH)
     search_result = []
     for root, dirs, file_lists in search_here:
