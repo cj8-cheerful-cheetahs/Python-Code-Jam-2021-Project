@@ -23,6 +23,7 @@ if __name__ == "__main__":
     printstart("""Because of that, you decide that you'll try to turn of the System, because you found indicates that that will stop the attack. But unfortunally, you need Root Privilages to shutdown the Operating System \n \n""")
     printstart("""You can gain access to these by (*insert challange here, example: get the password of the main file*). You will have to overcome multiple challenges \n \n""")
     printstart("""So, dont waste your time, think smarter not harder, and good luck!""")
+    print(term.home + term.clear + term.move_y(term.height // 2))
     gameloads("*Title* Starting,")
     gameloads("Gaining System Access,")
     for _ in range(10):
