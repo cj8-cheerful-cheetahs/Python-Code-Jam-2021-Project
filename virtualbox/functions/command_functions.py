@@ -6,7 +6,11 @@ import random
 import time
 
 
-# COMMAND LIST
+
+
+
+
+
 def random_test():
     print_box("OS SECURITY",
             ["SECURITY BREACH DETECTED",
@@ -180,4 +184,20 @@ def portscanner(user_input, fs, user):
     #         else:
     #             print_box("PortScanner",'The Port you entered wasnt found in the Network!')
 
+
+# COMMAND LIST
+user_commands = {"ls": ls,
+                 "touch": add,
+                 "add": add,
+                 "mkdir": mkdir,
+                 "rm": rm,
+                 "dir": dir_cat,
+                 "h": help,
+                 "help": help,
+                 "quickcrypt": quickcrypt,
+                 "read": read,
+                 "search": search,
+                 "portscan": portscanner,
+                 "cd": cd
+}
 
