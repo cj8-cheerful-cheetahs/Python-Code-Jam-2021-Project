@@ -139,74 +139,45 @@ def search(user_input, fs, user):
     print_box("search", result)
 
 
-def portscanner():
-    "portscan - commits portscan"
-    ports = [22, 80, 9929, 8898, 22542, 187, 32312]
-    outputs = ['not a hint', 'not a hint', 'not a hint', 'not a hint',\
-               'not a hint', 'a hint', 'a hint', 'a hint', 'a hint']
-    for i in range(7):
-        port = ports[i]
-        print(
-            str(f"Found Port in Network: \n    {port}/TCP [State: open] \n    Scanning Port... \n"))  # term.green_on_black
-        time.sleep(0.4)
-    inp = input('Select a port to scan: ')
-    inp = int(inp)
-    if inp in ports:
-        output = random.choice(outputs)
-        time.sleep(3)
-        clearterm()
-        print(f'Port {inp} attackable. \n    Attack launchend. \n    Output: {output} \n')
-
-    else:
-        print('nothing')
-
-# print(term.home + term.clear + term.move_y(term.height // 2))
-# for i in range(7):
-#     time.sleep(0.4)
-#     port = ports[i]
-#     randomi = random.randint(0, 1)
-#     output = random.choice(outputs)
-#     if randomi == 1:
-#         print(f'Port {port} attackable. \n    Attack launchend. \n    Output: {output} \n')
-
-
-user_commands = {"ls": ls,
-                 "touch": add,
-                 "add": add,
-                 "mkdir": mkdir,
-                 "rm": rm,
-                 "dir": dir_cat,
-                 "h": help,
-                 "help": help,
-                 "quickcrypt": quickcrypt,
-                 "read": read,
-                 "search": search,
-                 "portscan": portscanner,
-                 "cd": cd
-}
+def portscanner(user_input, fs, user):
+    from virtualbox.project import clear_term
+    from random import randint
+    # try:
+    #     # if user_input contains specific port specifies var
+    #     if user_input[1]:
+    #         use_true = 'temp'
+    # except:
+    #     pass
+    # ports = [22, 80, 9929, 8898, 22542, 187, 32312]
+    # outputs = ['not a hint', 'not a hint', 'not a hint', 'not a hint', 'not a hint', 'a hint', 'a hint', 'a hint', 'a hint']
+    # # if specified var (= if user_input contains specific port)
+    # if use_true:
+    #     # Different Prints to show user a portscanner experience and show hint/ no hint
+    #     print_box("PortScanner", f'Scanning Network for Port: {user_input}')
+    #     time.sleep(1)
+    #     clear_term()
+    #     print_box("PortScanner", f"Found Port in Network: \n    {port}/TCP [State: open] \n    Scanning Port... \n")
+    #     time.sleep(1)
+    #     clear_term()
+    #     output = random.choice(outputs)
+    #     clear_term()
+    #     print_box("PortScanner",f'Port {inp} attackable. \n    Attack launchend. \n    Output: {output} \n')
+    # else:
+    #     # 5-7 to show user a portscanner experience and show hint/ no hint
+    #     for i in range(randint(5, 7)):
+    #         port = ports[i]
+    #         print_box("PortScanner",f"Found Port in Network: \n    {port}/TCP [State: open] \n    Scanning Port... \n")  # term.green_on_black
+    #         time.sleep(0.4)
+    #     inp = int(input('Select a port to scan: '))
+    #     with term.cbreak():
+    #         val = ''
+    #         if int(val.lower()) in ports:
+    #             output = random.choice(outputs)
+    #             time.sleep(3)
+    #             clear_term()
+    #             print_box("PortScanner",f'Port {inp} attackable. \n    Attack launchend. \n    Output: {output} \n')
+    #
+    #         else:
+    #             print_box("PortScanner",'The Port you entered wasnt found in the Network!')
 
 
-
-
-"""           ____,'`-, 
-      _,--'   ,/::.; 
-   ,-'       ,/::,' `---.___        ___,_ 
-   |       ,:';:/        ;'"`;"`--./ ,-^.;--. 
-   |:     ,:';,'         '         `.   ;`   `-. 
-    \:.,:::/;/ -:.                   `  | `     `-. 
-     \:::,'//__.;  ,;  ,  ,  :.`-.   :. |  ;       :. 
-      \,',';/O)^. :'  ;  :   '__` `  :::`.       .:' ) 
-      |,'  |\__,: ;      ;  '/O)`.   :::`;       ' ,' 
-           |`--''            \__,' , ::::(       ,' 
-           `    ,            `--' ,: :::,'\   ,-' 
-            | ,;         ,    ,::'  ,:::   |,' 
-            |,:        .(          ,:::|   ` 
-            ::'_   _   ::         ,::/:| 
-           ,',' `-' \   `.      ,:::/,:| 
-          | : _  _   |   '     ,::,' ::: 
-          | \ O`'O  ,',   ,    :,'   ;:: 
-           \ `-'`--',:' ,' , ,,'      :: 
-            ``:.:.__   ',-','        ::' 
-              `--.__, ,::.         ::' 
-                   |:  ::::.       ::' 
-                   |:  ::::::    ,::' """
