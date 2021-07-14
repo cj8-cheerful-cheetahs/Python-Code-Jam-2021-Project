@@ -1,4 +1,4 @@
-from config import unicode
+from virtualbox.config import unicode
 
 
 def encode(string):

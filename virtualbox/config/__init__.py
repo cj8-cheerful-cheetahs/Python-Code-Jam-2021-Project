@@ -9,7 +9,10 @@ import string
 ALL_CHARACTERS = string.ascii_letters+string.digits+string.punctuation+string.whitespace
 
 # Home prefab path
-etcskel = "/etc/skel"
+etcskel = ["etc", "skel"]
+
+# Where users are stored
+passwd = ["etc", "passwd"]
 
 # Template for down and up when printing boxes
 template = '{0}{1}/{2}/{3}{4}'
@@ -24,4 +27,4 @@ START_PATH = MAIN_PATH + "OS"
 BLANK_LINES = 50
 
 # Unicode
-unicode = "utf-16"
+unicode = "utf-8"

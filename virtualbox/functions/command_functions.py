@@ -7,6 +7,7 @@ from virtualbox.exceptions import NoSuchFileOrDirectory
 from virtualbox.exceptions import CommandNotFound
 from virtualbox.unicode import encode
 from virtualbox.vulnerabilities import VULNERABILITIES, add_failure, add_vulnerabillity, remove_vulnerabillity
+from virtualbox.cryptology import encrypt
 from config import MAIN_PATH
 import random
 import time
@@ -184,12 +185,22 @@ def help_function(name: Optional(str, None), extend: Flag(True) = False):
 
 @add_function(("encrypt", "enc"), "user_input", "fs", "user")
 @expand_args(0, "file", "password", "mode")
-def encrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
+def user_encrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
     """encrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
     [EXTEND]
     encrypt - encrypts file using 1 of 4 encryption algoritms
     """
     fs.getFile(user, file.split("/")).encrypt(user, password, mode)
+
+
+@add_function(("encryptword", "encword"), "user_input")
+@expand_args(0, "phrashe", "password", "mode")
+def encryptword(phrashe: encode, password: encode, mode: Keyword(int) = 2):
+    """encrypt [phrashe:string] [password:string or int(mode 3)] [mode:int default 2]
+    [EXTEND]
+    encryptword - encrypts phrahse using 1 of 4 encryption algoritms and prints it back to user
+    """
+    print(encrypt(phrashe, password, mode=mode))
 
 
 @add_function(("decrypt", "dec"), "user_input", "fs", "user")

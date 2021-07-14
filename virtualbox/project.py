@@ -1,5 +1,7 @@
 from functions.command_functions import get_entry
 from functions.blessed_functions import print_tree, print_box
+from users.user import User, ROOT
+from users.uid import Uidspace
 from exceptions import CannotFullFillFunction
 from config import START_PATH, MAIN_PATH
 from blessed import Terminal
@@ -10,15 +12,18 @@ from fs.fs_dir import Dir
 # file system imports
 fs = Dir.FromPath(START_PATH, None, 7, 0, 0)
 
+# Users uid space
+users_uid_space = Uidspace(1)
+
+# User
+Users = User.loadUsers(ROOT, fs, users_uid_space)
+
+# init terminal
 term = Terminal()
 print(term.home + term.clear + term.move_y(term.height // 2))
 
 failed_tasks = 0
 
-
-class User:
-    """temporary user class"""
-    uid = 0
 
 
 # is't it declared somewhere already?
@@ -51,6 +56,7 @@ def user_input_cmd(fs, user):
         entry[0](*ProcessArgs(entry[1], locals()))
         # except Exception as e:
         #   print(e)
+
 
 # should be moved into it's own file
 def start(fs, user):
@@ -90,12 +96,12 @@ def start(fs, user):
             firstgamefile.write('1')
     else:
         print_box('Welcome Back', ['', 'Your Game-State was loaded again! ', ''])
-    
+
 
 def main():
     global fs
-    start(fs, User)
-    user_input_cmd(copy(fs), User)
+    start(fs, ROOT)
+    user_input_cmd(copy(fs), ROOT)
 
 
 if __name__ == "__main__":

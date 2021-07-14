@@ -21,34 +21,34 @@ def print_tree(header, directory, user):
     # "│", "─", " ┌", "┬", "┐", "├", "┼", "┤", "└", "┴", "┘"]
 
 
-def lc(char):
-    if len(char) == 0:
+def lc(char, index):
+    if len(char) <= index or len(char) == 0:
         return "│"
-    if char[0] in ("─", "┬", "┐", "┼", "┤"  "┴", "┘"):
+    if char[index] in ("─", "┬", "┐", "┼", "┤"  "┴", "┘"):
         return "├"
     return "│"
 
 
-def rc(char):
-    if len(char) == 0:
+def rc(char, index):
+    if len(char) <= index or len(char) == 0:
         return "│"
-    if char[-1] in ("─", "┌", "┬", "├", "┼", "└", "┴"):
+    if char[index] in ("─", "┌", "┬", "├", "┼", "└", "┴"):
         return "├"
     return "│"
 
 
-def uc(char):
-    if len(char) == 0:
+def uc(char, index):
+    if len(char) <= index or len(char) == 0:
         return "─"
-    if char[0] in ("│", "├", "┼", "┤", "└", "┴", "┘"):
+    if char[index] in ("│", "├", "┼", "┤", "└", "┴", "┘"):
         return "┬"
     return "─"
 
 
-def dc(char):
-    if len(char) == 0:
+def dc(char, index):
+    if len(char) <= index or len(char) == 0:
         return "─"
-    if char[0] in ("│", "┌", "┬", "┐", "├", "┼", "┤"):
+    if char[index] in ("│", "┌", "┬", "┐", "├", "┼", "┤"):
         return "┴"
     return "─"
 
@@ -62,9 +62,17 @@ def print_box(header, text):
     max_len = max(map(len, text))
     if max_len < len(header) + 4:
         max_len = len(header) + 4
-    shift = "─"*(max_len - len(header) - 3)
+
+    shift = len(header) + 3
+
+    ushift = ""
+    dshift = ""
+    for i in range(max_len - shift):
+        ushift += uc(text, shift + i)
+        dshift += dc(text, shift + i)
+
     ftemplate = '{:<' + str(max_len) + '}'
 
-    print(template.format('┌', uc(text[0]), header, shift, '┐'))
-    print("\n".join(lc(i) + ftemplate.format(i) + rc(i) for i in text))
-    print(template.format('└', dc(text[-1]), header, shift, '┘'))
+    print(template.format('┌', uc(text[0], 0), header, ushift, '┐'))
+    print("\n".join(lc(i, 0) + ftemplate.format(i) + rc(i, -1) for i in text))
+    print(template.format('└', dc(text[-1], 0), header, dshift, '┘'))

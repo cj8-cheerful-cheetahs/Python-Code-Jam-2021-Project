@@ -14,6 +14,8 @@ virtualbox/functions/blessed_functions.py
 virtualbox/functions/command_functions.py
 virtualbox/functions/generalfunctions.py
 virtualbox/generalclasses/__init__.py
+virtualbox/unicode/__init__.py
+virtualbox/vulnerabilities/__init__.py
 virutal_box.egg-info/PKG-INFO
 virutal_box.egg-info/SOURCES.txt
 virutal_box.egg-info/dependency_links.txt

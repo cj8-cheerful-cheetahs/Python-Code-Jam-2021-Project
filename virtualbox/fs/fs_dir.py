@@ -144,6 +144,7 @@ class Dir(AC):
     def getType(self, user, path, Type, exception):
         result = self
         for i in path:
+            print(i)
             result = result.shallowget(user, i)
         if type(result) != Type:
             raise exception()
