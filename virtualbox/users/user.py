@@ -91,4 +91,4 @@ class User:
 
 
 ROOT = User("root", 0, "/root", b'\x14\x02\xfe9\xd6\xdd\x03\x020n\x1a5}\x92')
-ROOT = User("root", 0, "/root", b'')
+

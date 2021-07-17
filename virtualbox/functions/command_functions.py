@@ -115,13 +115,15 @@ def dir_cat(fs: Dir, user: User, term: Terminal) -> None:
 @add_function(("mkdir", "makedirectory"), 'user_input', 'fs', 'user')
 @expand_args(0, "path")
 def mkdir(path: str, fs: Dir, user: User) -> None:
-    """Command invocation: mkdir [path:string]
+    """ Command invocation: mkdir [path:string]
+
     [EXTEND]
     chmod - change access permissions of the specified file or directory
+
     4 = read
     2 = write
     1 = execute
-    '''
+    """
     path = path.split('/')
     fs.get(user, path).chmod(user, up, op)
 
@@ -130,9 +132,10 @@ def mkdir(path: str, fs: Dir, user: User) -> None:
 @expand_args(0, "path")
 def add(path: str, fs: Dir, user: User) -> None:
     """Command invocation: add [path:string]
+    
     [EXTEND]
     chown - change owner of file or directory to the specified user
-    '''
+    """
     path = path.split('/')
     if name in users:
         fs.get(user, path).chown(user, users[name])
@@ -145,7 +148,7 @@ def add(path: str, fs: Dir, user: User) -> None:
 def rm(path: str, fs: Dir, user: User) -> None:
     """Command invocation: rm [path:string]
     [EXTEND]
-    '''
+    """
     clear_term(term)
 
 
