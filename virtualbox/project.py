@@ -58,12 +58,12 @@ def user_input_cmd(fs: Dir, user: User, rootfs: Dir, term: Terminal) -> None:
         user_input = request(">>>  ", term).strip().split()
         if len(user_input) == 0:
             continue
-        try:
-            clear_term(term)
-            entry = get_entry(user_input[0])
-            entry[0](*ProcessArgs(entry[1], {**locals(), **globals()}))
-        except Exception as e:
-            echo(e, term)
+        # try:
+        clear_term(term)
+        entry = get_entry(user_input[0])
+        entry[0](*ProcessArgs(entry[1], {**locals(), **globals()}))
+        # except Exception as e:
+        #     echo(e, term)
 
 
 def start(fs: Dir, user: User, term: Terminal) -> None:
