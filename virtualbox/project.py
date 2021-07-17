@@ -3,13 +3,13 @@ from copy import copy
 from time import sleep
 
 from blessed import Terminal
-from config import START_PATH
-from exceptions import CannotFullFillFunction
-from fs.fs_dir import Dir
-from functions.blessed_functions import (
+from virtualbox.config import START_PATH
+from virtualbox.exceptions import CannotFullFillFunction
+from virtualbox.fs.fs_dir import Dir
+from virtualbox.functions.blessed_functions import (
     clear_term, echo, print_box, print_loading, print_tree, request
 )
-from functions.command_functions import get_entry
+from virtualbox.functions.command_functions import get_entry
 from playsound import playsound
 
 from blessed import Terminal
@@ -17,9 +17,9 @@ import threading
 from shutil import copytree, rmtree
 from os import getcwd
 
-from users.login import login
-from users.uid import Uidspace
-from users.user import ROOT, User
+from virtualbox.users.login import login
+from virtualbox.users.uid import Uidspace
+from virtualbox.users.user import ROOT, User
 
 
 
@@ -160,10 +160,11 @@ def main():
 
     # start game
     start(fs, ROOT, term)
+    echo('SYSTEM HACKED username = user, password = None', term)
     user_input_cmd(copy(fs), login(Users, term), fs, term)
 
 
-if __name__ == "__main__":
+def startgame():
     t1 = threading.Thread(target=main)
     t2 = threading.Thread(target=playbgm)
     t1.start()
