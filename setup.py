@@ -1,6 +1,6 @@
 import setuptools
 
-import virtualbox  # for version number
+import project  # for version number
 
 # To run: py setup.py sdist bdist_wheel
 # To upload: py -m twine upload --sign --skip-existing dist/*
@@ -11,10 +11,11 @@ with open('README.md', encoding='utf-8') as readme_file:
     long_description = readme_file.read()
 
 setuptools.setup(
-    name='virutal box',
-    version=virtualbox.__version__,
+    # TODO: change name
+    name='project',
+    version=project.__version__,
     author='Team Cheerful Cheetahs',
-    author_email='contact@fergusdev.com',
+    author_email='',
     license='MIT',
     description='Pending',
     long_description=long_description,
@@ -35,7 +36,6 @@ setuptools.setup(
     ],
     python_requires='>=3',
     install_requires=[
-        'blessed',
-        'playsound'
+        '',
     ]
 )
