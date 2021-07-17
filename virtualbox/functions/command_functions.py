@@ -1,15 +1,21 @@
 import random
 import string
 import time
+from typing import Any, Callable, Iterable
+
+from blessed import Terminal
 
 from virtualbox.argssystem.classes import Flag, Keyword, Optional
 from virtualbox.argssystem.functions import expand_args
 from virtualbox.config import MAIN_PATH
 from virtualbox.cryptology import encrypt
 from virtualbox.exceptions import (
-    CommandNotFound, InvalidLoginOrPassword, NoSuchFileOrDirectory
+    CommandNotFound, InvalidLoginOrPassword, NoSuchFileOrDirectory, NoSuchUser,
+    PermisionDenied
 )
+from virtualbox.fs.fs_dir import Dir
 from virtualbox.unicode import encode
+from virtualbox.users.user import User
 
 from .blessed_functions import (
     clear_term, echo, print_box, print_loading, print_tree
@@ -25,8 +31,9 @@ OSlog = ['unknown user: connected,']
 
 
 # wrappers
-def add_function(names, *args):
-    def add(function):
+def add_function(names: list, *args: Any) -> Callable[[Callable[[...], Any]], Callable[[...], Any]]:
+    """Adds wrapper function into accesable by user functions"""
+    def add(function: Callable[[...], Any]) -> Callable[[...], Any]:
         for i in names:
             user_commands[i] = len(functions_list)
         functions_list.append((function, args))
@@ -35,27 +42,32 @@ def add_function(names, *args):
 
 
 # getcommands
-def get_entry(name):
+def get_entry(name: str) -> tuple:
+    """Returns entry from commands list accesable by user that is indexed by given name"""
     try:
         return functions_list[user_commands[name]]
     except KeyError:
         raise CommandNotFound()
 
 
-def get_command(name):
+def get_command(name: str) -> Callable[[...], Any]:
+    """Returns command from commands list accesable by user that is indexed by given name"""
     return get_entry(name)[0]
 
 
-def get_command_args(name):
+def get_command_args(name: str) -> tuple:
+    """Returns args of command from commands list accesable by user that is indexed by given name"""
     return get_entry(name)[1]
 
 
-def get_command_doc(name):
+def get_command_doc(name: str) -> str:
+    """Returns docstring of command from commands list accesable by user that is indexed by given name"""
     return get_command(name).__doc__
 
 
 # COMMAND LIST
-def add_failure(value):
+def add_failure(value: Iterable) -> None:
+    """Adds failure"""
     global failed_tasks
     failed_tasks += value
     echo(f"DEBUG: failues: {failed_tasks}")
@@ -63,18 +75,20 @@ def add_failure(value):
 
 
 @add_function(("ls", "dir"), "fs", "user", "term")
-def ls(fs, user, term):
-    """ls
-    ls - list files and directories in current directory
+def ls(fs: Dir, user: User, term: Terminal) -> None:
+    """Command invocation: ls
+
     [EXTEND]
+    ls - list files and directories in current directory
     """
     print_box("ls", fs.stringList(user), term)
 
 
 @add_function(("cd", ), 'user_input', "fs", "user", "term", 'rootfs')
 @expand_args(0, "path")
-def cd(path: str, fs, user, term, rootfs):
-    """cd [path:string]
+def cd(path: str, fs: Dir, user: User, term: Terminal, rootfs: Dir) -> None:
+    """Command invocation: cd [path:string]
+
     [EXTEND]
     cd - change directory to specified path
     """
@@ -86,8 +100,9 @@ def cd(path: str, fs, user, term, rootfs):
 
 
 @add_function(("tree", ), 'fs', 'user', "term")
-def dir_cat(fs, user, term):
-    """dir
+def dir_cat(fs: Dir, user: User, term: Terminal) -> None:
+    """Command invocation: dir
+
     [EXTEND]
     dir = print file structure
     """
@@ -96,8 +111,9 @@ def dir_cat(fs, user, term):
 
 @add_function(("mkdir", "makedirectory"), 'user_input', 'fs', 'user')
 @expand_args(0, "path")
-def mkdir(path: str, fs, user):
-    """mkdir [path:string]
+def mkdir(path: str, fs: Dir, user: User) -> None:
+    """Command invocation: mkdir [path:string]
+
     [EXTEND]
     mdkir - creates direcotry that will have specified path
     """
@@ -107,8 +123,9 @@ def mkdir(path: str, fs, user):
 
 @add_function(("touch", "add"), 'user_input', 'fs', 'user')
 @expand_args(0, "path")
-def add(path: str, fs, user):
-    """add [path:string]
+def add(path: str, fs: Dir, user: User) -> None:
+    """Command invocation: add [path:string]
+
     [EXTEND]
     add - creates file that will have specified path
     """
@@ -118,8 +135,9 @@ def add(path: str, fs, user):
 
 @add_function(("rm", "remove"), "user_input", "fs", "user")
 @expand_args(0, "path")
-def rm(path: str, fs, user):
-    """rm [path:string]
+def rm(path: str, fs: Dir, user: User) -> None:
+    """Command invocation: rm [path:string]
+
     [EXTEND]
     rm - removes file or folder that have specified path
     """
@@ -129,8 +147,9 @@ def rm(path: str, fs, user):
 
 @add_function(("cp", "copy"), "user_input", "fs", "user")
 @expand_args(0, "from_path", "to_path")
-def cp(from_path: str, to_path: str, fs, user):
-    """cp [from:string] [to:string]
+def cp(from_path: str, to_path: str, fs: Dir, user: User) -> None:
+    """Command invocation: cp [from:string] [to:string]
+
     [EXTEND]
     cp - copies file or directory form 1 path to another
     """
@@ -139,22 +158,24 @@ def cp(from_path: str, to_path: str, fs, user):
 
 @add_function(("mv", "move"), "user_input", "fs", "user")
 @expand_args(0, "from_path", "to_path")
-def mv(from_path: str, to_path: str, fs, user):
-    """mv [from:string] [to:string]
+def mv(from_path: str, to_path: str, fs: Dir, user: User) -> None:
+    """Command invocation: mv [from:string] [to:string]
+
     [EXTEND]
     mv - moves file or directory form 1 path to another.
-    can be used to rename directories
+    it can be used to rename directories
     """
     fs.mv(user, from_path.split("/"), to_path.split("/"))
 
 
 @add_function(("help", "h"), "user_input", "term")
 @expand_args(0, "name", "donotextend")
-def help_function(name: Optional(str, None), term, donotextend: Flag(False) = True):
-    """help [function:string] [donotextend if present print less detailed help]
-     [EXTEND]
-     help - hymmm i wonder what it does?
-     """
+def help_function(name: Optional(str, None), term: Terminal, donotextend: Flag(False) = True) -> None:
+    """Command invocation: help [function:string] [donotextend if present print less detailed help]
+
+    [EXTEND]
+    help - hymmm i wonder what it does?
+    """
     if name is None:
         print_box("commands", user_commands.keys(), term)
         return
@@ -168,8 +189,9 @@ def help_function(name: Optional(str, None), term, donotextend: Flag(False) = Tr
 
 @add_function(("encrypt", "enc"), "user_input", "fs", "user")
 @expand_args(0, "file", "password", "mode")
-def user_encrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
-    """encrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
+def user_encrypt(file: str, password: encode, fs: Dir, user: User, mode: Keyword(int) = 2) -> None:
+    """Command invocation: encrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
     encrypt - encrypts file using 1 of 4 encryption algoritms
     """
@@ -178,8 +200,9 @@ def user_encrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
 
 @add_function(("encryptword", "encword"), "user_input", 'term')
 @expand_args(0, "phrashe", "password", "mode")
-def encryptword(phrashe: encode, password: encode, term, mode: Keyword(int) = 2):
-    """encrypt [phrashe:string] [password:string or int(mode 3)] [mode:int default 2]
+def encryptword(phrashe: encode, password: encode, term: Terminal, mode: Keyword(int) = 2) -> None:
+    """Command invocation: encrypt [phrashe:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
     encryptword - encrypts phrahse using 1 of 4 encryption algoritms and prints it back to user
     """
@@ -188,8 +211,9 @@ def encryptword(phrashe: encode, password: encode, term, mode: Keyword(int) = 2)
 
 @add_function(("decrypt", "dec"), "user_input", "fs", "user")
 @expand_args(0, "file", "password", "mode")
-def decrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
-    """decrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
+def decrypt(file: str, password: encode, fs: Dir, user: User, mode: Keyword(int) = 2) -> None:
+    """Command invocation: decrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
     decrypt - decrypts file using 1 of 4 decrytpion algorithms and saves result
     """
@@ -198,8 +222,9 @@ def decrypt(file: str, password: encode, fs, user, mode: Keyword(int) = 2):
 
 @add_function(("decryptread", "dread", "decread"), "user_input", "fs", "user", 'term')
 @expand_args(0, "file", "password", "mode")
-def decryptread(file: str, password: encode, fs, user, term, mode: Keyword(int) = 2):
-    """decryptread [file:string] [password:string or int(mode 3)] [mode:int default 2]
+def decryptread(file: str, password: encode, fs: Dir, user: User, term: Terminal, mode: Keyword(int) = 2) -> None:
+    """Command invocation: decryptread [file:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
     decryptread - decrypts file using 1 of 4 decrytpion algorithms and prints result
     """
@@ -208,8 +233,9 @@ def decryptread(file: str, password: encode, fs, user, term, mode: Keyword(int) 
 
 @add_function(("cat", "read"), "user_input", "fs", "user", 'term')
 @expand_args(0, "file", "bin")
-def read(file: str, fs, user, term, bin: Flag(True) = False):
-    """read [file:string] [mode:text]
+def read(file: str, fs: Dir, user: User, term: Terminal, bin: Flag(True) = False) -> None:
+    """Command invocation: read [file:string] [mode:text]
+
     [EXTEND]
     read - reads file using binary(bin) or text(text) modes
     """
@@ -218,14 +244,17 @@ def read(file: str, fs, user, term, bin: Flag(True) = False):
 
 @add_function(("write", ), "user_input", "fs", "user")
 @expand_args(0, "file", "content", "bin")
-def write(file: str, content: str, fs, user, bin: Flag(True) = False):
-    """write [file:string] [content]
+def write(file: str, content: str, fs: Dir, user: User, bin: Flag(True) = False) -> None:
+    """Command invocation: write [file:string] [content]
+
     [EXTEND]
-    write - overwrites file with specified content"""
+    write - overwrites file with specified content
+    """
     fs.getFile(user, file.split("/")).write(user, " ".join(content), bin)
 
 
-def search_back(what, walk, piervous):
+def search_back(what: str, walk: list, piervous: str) -> list:
+    """Subfunction of search retruns list of paths that contais specified substring"""
     result = []
     for i in walk:
         if isinstance(i, tuple):
@@ -239,8 +268,9 @@ def search_back(what, walk, piervous):
 
 @add_function(("search", "find"), "user_input", "fs", 'rootfs', "user", 'term')
 @expand_args(0, "what", 'path')
-def search(what: str, path: str, fs, rootfs, user, term):
-    """search [name:string] [path]
+def search(what: str, path: str, fs: Dir, rootfs: Dir, user: User, term: Terminal) -> None:
+    """Command invocation: search [name:string] [path]
+
     [EXTEND]
     search - searches for file that contains name in it's name
     """
@@ -261,9 +291,9 @@ def search(what: str, path: str, fs, rootfs, user, term):
 
 @add_function(("portscan", "nmap"), "user_input", "fs", "user", 'term')
 @expand_args(0, "port")
-def portscanner(port: Optional(int, None), fs, user, term):
-    """
-    portscan (optional[port:int])
+def portscanner(port: Optional(int, None), fs: Dir, user: User, term: Terminal) -> None:
+    """Command invocation: portscan (optional[port:int])
+
     [EXTEND]
     portscan - scans for port in network
     """
@@ -301,8 +331,12 @@ def portscanner(port: Optional(int, None), fs, user, term):
 
 
 @add_function(("devresetintro", ))
-def dev_reset():
-    """replace docstring if you want help for this function"""
+def dev_reset() -> None:
+    """Command invocation: devresetintro
+
+    [EXTEND]
+    resets intro
+    """
     # script_dir = os.path.dirname(__file__)
     # script_dir = script_dir.replace('functions/', '') it will crash without argumnts
     with open(MAIN_PATH + 'first_game.txt', 'w') as firstgamefile:
@@ -310,12 +344,14 @@ def dev_reset():
         firstgamefile.write('0')
 
 
-def add_vulnerabillity(vulnerability):
+def add_vulnerabillity(vulnerability: Any) -> None:
+    """Adds voulnerability? do we eaven use this?"""
     global VULNERABILITIES
     VULNERABILITIES.append(vulnerability)
 
 
-def remove_vulnerabillity(vulnerability):
+def remove_vulnerabillity(vulnerability: Any) -> None:
+    """Removes voulnerability"""
     global VULNERABILITIES
     try:
         VULNERABILITIES.remove(vulnerability)
@@ -325,11 +361,12 @@ def remove_vulnerabillity(vulnerability):
 
 @add_function(("morse", ), "user_input", 'term')
 @expand_args(0, "user_input")
-def morsescan(user_input: str, term):
-    """morse [string of 0/1, separated by *]
-        [EXTEND]
-        morse - translates morse code
-        """
+def morsescan(user_input: str, term: Terminal) -> None:
+    """Command invocation: morse [string of 0/1, separated by *]
+
+    [EXTEND]
+    morse - translates morse code
+    """
     # inputs must be 010*1020*293 ect seperated by "*"
     character = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
                  'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -355,8 +392,9 @@ def morsescan(user_input: str, term):
 
 
 @add_function(("vscan", ), 'term')
-def hint(term):
-    """vscan
+def hint(term: Terminal) -> None:
+    """Command invocation: vscan
+
     [EXTEND]
     vscan - scans for vulnerabilities in network
     """
@@ -376,7 +414,8 @@ def hint(term):
     OSlog.append("SECURITY AI: detecting unknown user,")
 
 
-def ipcypher(listl):
+def ipcypher(listl: list) -> None:
+    """Should't it be remmoved? it is not accesable by user at all"""
     lostl = []
     for word in listl:
         retstring = ''
@@ -399,7 +438,8 @@ def ipcypher(listl):
 # print(ipcypher(['nineone']))
 
 
-def gethint():
+def gethint() -> str:
+    """Returns random hint"""
     # Words split by a space, words cant be longer than 8 letters
     # wouldnt recommend longer hint than 4-5 words. Best is 3 words
     hints = ['no_connection false_access AtomToor45tpf unsecure_route unknown missing_port invalid_acces\
@@ -408,9 +448,9 @@ def gethint():
 
 
 @add_function(("ipsearch", ), 'term')
-def ipsearch(term):
-    """
-    ipsearch
+def ipsearch(term: Terminal) -> None:
+    """Command invocation: ipsearch
+
     [EXTEND]
     ipsearch - Search the system for attackable ips
     """
@@ -451,9 +491,9 @@ def ipsearch(term):
 
 @add_function(("ipscan", ), "user_input", "term")
 @expand_args(0, "user_input")
-def ipscan(user_input: str, term):
-    """
-    ipscan [ip]
+def ipscan(user_input: str, term: Terminal) -> None:
+    """Command invocation: ipscan [ip]
+
     [EXTEND]
     ipscan - decyphers a ip to words
     """
@@ -478,21 +518,21 @@ def ipscan(user_input: str, term):
 
 
 @add_function(("logs", ), 'term')
-def logs(term):
+def logs(term: Terminal) -> None:
+    """Command invocation: logs
+
+    [EXTEND]
+    logs - shows log history
     """
-        logs
-        [EXTEND]
-        logs - shows log history
-        """
     print_box("LOGS", OSlog, term)
 
 
 @add_function(("pwscan", "hashcat"), 'term')
-def passwordscan(term):
-    """
-           pwscan
-           [EXTEND}
-           pwscan/hashcat - scans locally stored insecure passwords
+def passwordscan(term: Terminal) -> None:
+    """Command invocation: pwscan
+
+    [EXTEND}
+    pwscan/hashcat - scans locally stored insecure passwords
     """
     pwlist = ['df23jsq', 'qsAtom5', 'LQR', "1234567", "54354fd32", "444hdFAaws", "guuf2321d"]
     all1 = list(string.ascii_letters + string.digits)
@@ -526,92 +566,110 @@ def passwordscan(term):
 
 @add_function(('su', 'switchuser'), 'user_input', 'user', 'Users')
 @expand_args(0, 'user', 'password')
-def su(user: str, password: encode, me, users):
-    '''su [user:str] [password:str]
+def su(user: str, password: Optional(encode, None), me: User, users: list) -> None:
+    """Command invocation: su [user:str] [password:str]
+
     [EXPAND]
     su - swtiches current user to provideduser
-    '''
-    if user in users and users[user].checkPassword(password):
-        me.copy(users[user])
+    """
+    if user in users:
+        if password is None:
+            if me.uid == 0:
+                me.copy(users[user])
+            else:
+                raise PermisionDenied()
+        elif users[user].checkPassword(password):
+            me.copy(users[user])
     else:
-        raise InvalidLoginOrPassword
+        raise InvalidLoginOrPassword()
 
 
 @add_function(('users', 'listusers'), 'Users', 'term')
-def listusers(users, term):
-    '''listusers
+def listusers(users: list, term: Terminal) -> None:
+    """Command invocation: listusers
+
     [EXPAND]
     listusers - list system users
-    '''
+    """
     print_box('users', users.keys(), term)
 
 
 @add_function(('chmod', 'changepermisions'), 'user_input', 'user', 'fs')
 @expand_args(0, 'path', 'up', 'op')
-def chmod(path: str, up: int, op: int, user, fs):
-    '''chadd [path: str] [userpermmisions: int] [otherspermisions: int]
+def chmod(path: str, up: int, op: int, user: User, fs: Dir) -> None:
+    """Command invocation:c hadd [path: str] [userpermmisions: int] [otherspermisions: int]
+
     [EXPAND]
     chadd - sets permisions of diectory/files with specified path
     4 = read
     2 = write
     1 = execute
-    '''
+    """
     path = path.split('/')
-    fs.get(user, path).chmod(user, up, op)
+    fs.get(user, path[:-1]).chmod(user, path[-1], up, op)
 
 
 @add_function(('chadd', 'addpermisions'), 'user_input', 'user', 'fs')
 @expand_args(0, 'path', 'up', 'op')
-def chadd(path: str, up: int, op: int, user, fs):
-    '''chadd [path: str] [userpermmisions: int] [otherspermisions: int]
+def chadd(path: str, up: int, op: int, user: User, fs: Dir) -> None:
+    """Command invocation: chadd [path: str] [userpermmisions: int] [otherspermisions: int]
+
     [EXPAND]
     chadd - permorms binary or on permisions of diectory/files with specified path
     4 = read
     2 = write
     1 = execute
-    '''
+    """
     path = path.split('/')
-    fs.get(user, path).chadd(user, up, op)
+    fs.get(user, path[:-1]).chadd(user, path[-1], up, op)
 
 
-@add_function(('chmod', 'changeowner'), 'user_input', 'user', 'users', 'fs')
+@add_function(('chown', 'changeowner'), 'user_input', 'user', 'Users', 'fs')
 @expand_args(0, 'path', 'name')
-def chown(path: str, name: str, user, users, fs):
-    '''chaown [path:str] [name:str]
+def chown(path: str, name: str, user: User, users: list, fs: Dir) -> None:
+    """Command invocation: chown [path:str] [name:str]
+
     [EXPAND]
     chown - changes owner of file/directory to user of specified name
-    '''
+    """
     path = path.split('/')
     if name in users:
-        fs.get(user, path).chown(user, users[name])
+        fs.getDir(user, path[:-1]).chown(user, path[-1], users[name])
     else:
         raise NoSuchUser(name)
 
 
-@add_function(('showp', 'shownpermisions'), 'user_input', 'fs', 'term')
+@add_function(('showp', 'shownpermisions'), 'user_input', 'fs', 'term', 'ROOT')
 @expand_args(0, 'path')
-def showpermisions(path: str, fs, term):
-    '''showp [path:str]
+def showpermisions(path: str, fs: Dir, term: Terminal, ROOT: User) -> None:
+    """Command invocation: showp [path:str]
+
     [EXPAND]
     showp - prints file/directory permisons
-    '''
+    """
     path = path.split('/')
-    perms = fs.get(ROOT, path).perms()
+    perms = fs.get(ROOT, path).perms
     echo('up: ' + str(perms[0]) + ' op: ' + str(perms[1]) + ' uid: ' + str(perms[2]), term)
 
 
 @add_function(('clear', 'cls'), 'term')
-def clear(term):
-    '''clear - clears screen
+def clear(term: Terminal) -> None:
+    """Command invocation: clear - clears screen
+
     [EXPAND]
     what do you expect here? thats it
-    '''
+    """
     clear_term(term)
 
 
 @add_function(("tutorial", "t"), "user_input", 'term')
 @expand_args(0, "user_input")
-def tutorial(user_input: Optional(int, None), term):
+def tutorial(user_input: Optional(int, None), term: Terminal) -> None:
+    """Command invocation: tutorial [page:int default 1]
+
+    [EXPAND]
+    tutorial - displays specified tutorial page
+    """
     if user_input is None or user_input == 1:
         print_box("tutorial", [
                   "help 1: getting around the os (1/4)",
@@ -660,7 +718,12 @@ def tutorial(user_input: Optional(int, None), term):
 
 @add_function(("shutdown", ), "user_input", "term", 'user')
 @expand_args(0, "user_input")
-def shutdown(user_input: str, term, user):
+def shutdown(user_input: str, term: Terminal, user: User) -> None:
+    """Command invocation: shutdown
+
+    [EXPAND]
+    shutdown - shutsdown system
+    """
     if user_input == "AtomicProgramIranShutdown" and user.uid == 0:
         print_box("SHUTDOWN", ["PRESS ENTER TO INITIATE SHUTDOWN"], term)
         input()
