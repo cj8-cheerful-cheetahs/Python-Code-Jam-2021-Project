@@ -3,10 +3,12 @@ from copy import copy
 from time import sleep
 
 from blessed import Terminal
-from config import START_PATH
-from exceptions import CannotFullFillFunction
-from fs.fs_dir import Dir
-from functions.blessed_functions import (
+from playsound import playsound
+
+from .config import START_PATH
+from .exceptions import CannotFullFillFunction
+from .fs.fs_dir import Dir
+from .functions.blessed_functions import (
     clear_term, echo, print_box, print_loading, print_tree, request
 )
 from functions.command_functions import get_entry
@@ -17,9 +19,12 @@ import threading
 from shutil import copytree, rmtree
 from os import getcwd
 
-from users.login import login
-from users.uid import Uidspace
-from users.user import ROOT, User
+
+from .functions.command_functions import get_entry
+from .users.login import login
+from .users.uid import Uidspace
+from .users.user import ROOT, User
+
 
 
 
@@ -63,7 +68,7 @@ def user_input_cmd(fs: Dir, user: User, rootfs: Dir, term: Terminal) -> None:
         entry = get_entry(user_input[0])
         entry[0](*ProcessArgs(entry[1], {**locals(), **globals()}))
         # except Exception as e:
-        #     echo(e, term)
+
 
 
 def start(fs: Dir, user: User, term: Terminal) -> None:

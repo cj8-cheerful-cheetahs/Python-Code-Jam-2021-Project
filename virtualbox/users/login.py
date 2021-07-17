@@ -1,10 +1,11 @@
 from copy import copy
 
 from blessed import Terminal
-from users.user import User
 
 from virtualbox.exceptions import InvalidLoginOrPassword
 from virtualbox.functions.blessed_functions import echo, request
+
+from .user import User
 
 
 def login(Users: User, term: Terminal) -> None:

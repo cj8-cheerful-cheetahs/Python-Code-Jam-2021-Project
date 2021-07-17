@@ -24,7 +24,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
-            'project=project:main'
+            'project=virtualbox.project:main'
         ]
     },
     classifiers=[
@@ -36,6 +36,7 @@ setuptools.setup(
     ],
     python_requires='>=3',
     install_requires=[
-        '',
+        'playsound',
+	'blessed'
     ]
 )
