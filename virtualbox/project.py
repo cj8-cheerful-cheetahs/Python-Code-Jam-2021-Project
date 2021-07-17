@@ -3,17 +3,17 @@ from copy import copy
 from time import sleep
 
 from blessed import Terminal
-from config import START_PATH
-from exceptions import CannotFullFillFunction
-from fs.fs_dir import Dir
-from functions.blessed_functions import (
+from .config import START_PATH
+from .exceptions import CannotFullFillFunction
+from .fs.fs_dir import Dir
+from .functions.blessed_functions import (
     clear_term, echo, print_box, print_loading, print_tree, request
 )
-from functions.command_functions import get_entry
+from .functions.command_functions import get_entry
 from playsound import playsound
-from users.login import login
-from users.uid import Uidspace
-from users.user import ROOT, User
+from .users.login import login
+from .users.uid import Uidspace
+from .users.user import ROOT, User
 
 
 def playbgm() -> None:
