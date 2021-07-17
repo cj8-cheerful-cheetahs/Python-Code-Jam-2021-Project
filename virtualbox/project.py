@@ -3,7 +3,6 @@ from copy import copy
 from time import sleep
 
 from blessed import Terminal
-from playsound import playsound
 
 from .config import START_PATH
 from .exceptions import CannotFullFillFunction
