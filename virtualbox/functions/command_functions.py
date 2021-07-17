@@ -66,14 +66,12 @@ def get_command_doc(name: str) -> str:
 
 
 # COMMAND LIST
-
 def add_failure(value: Iterable) -> None:
     """Adds failure"""
     global failed_tasks
     failed_tasks += value
     echo(f"DEBUG: failues: {failed_tasks}")
     OSlog.append("SECURITY AI: became more aware of unknown user,")
-
 
 
 @add_function(("ls", "dir"), "fs", "user", "term")
@@ -92,14 +90,13 @@ def cd(path: str, fs: Dir, user: User, term: Terminal, rootfs: Dir) -> None:
     """Command invocation: cd [path:string]
 
     [EXTEND]
-    cd - change directory to the specified path
+    cd - change directory to specified path
     """
     if path[0] == '/':
         fs.copy(rootfs.getDir(user, path[1:].split("/")))
     else:
         fs.copy(fs.getDir(user, path.split("/")))
-    print_box("Files", fs.stringList(user), term)
-
+    print_box("getdir", fs.stringList(user), term)
 
 
 @add_function(("tree", ), 'fs', 'user', "term")
@@ -115,50 +112,46 @@ def dir_cat(fs: Dir, user: User, term: Terminal) -> None:
 @add_function(("mkdir", "makedirectory"), 'user_input', 'fs', 'user')
 @expand_args(0, "path")
 def mkdir(path: str, fs: Dir, user: User) -> None:
-    """ Command invocation: mkdir [path:string]
+    """Command invocation: mkdir [path:string]
 
     [EXTEND]
-    chmod - change access permissions of the specified file or directory
-
-    4 = read
-    2 = write
-    1 = execute
+    mdkir - creates direcotry that will have specified path
     """
-    path = path.split('/')
-    fs.get(user, path).chmod(user, up, op)
+    tmp = path.split("/")
+    fs.getDir(user, "" if len(tmp) == 0 else tmp[:-1]).mkdir(user, tmp[-1])
 
 
 @add_function(("touch", "add"), 'user_input', 'fs', 'user')
 @expand_args(0, "path")
 def add(path: str, fs: Dir, user: User) -> None:
     """Command invocation: add [path:string]
-    
+
     [EXTEND]
-    chown - change owner of file or directory to the specified user
+    add - creates file that will have specified path
     """
-    path = path.split('/')
-    if name in users:
-        fs.get(user, path).chown(user, users[name])
-    else:
-        raise NoSuchUser(name)
+    tmp = path.split("/")
+    fs.getDir(user, "" if len(tmp) == 0 else tmp[:-1]).touch(user, tmp[-1])
 
 
 @add_function(("rm", "remove"), "user_input", "fs", "user")
 @expand_args(0, "path")
 def rm(path: str, fs: Dir, user: User) -> None:
     """Command invocation: rm [path:string]
+
     [EXTEND]
+    rm - removes file or folder that have specified path
     """
-    clear_term(term)
+    tmp = path.split("/")
+    fs.get(user, "" if len(tmp) == 0 else tmp[:-1]).rm(user, tmp[-1])
 
 
-@add_function(("copy", "cp"), "user_input", "fs", "user")
+@add_function(("cp", "copy"), "user_input", "fs", "user")
 @expand_args(0, "from_path", "to_path")
 def cp(from_path: str, to_path: str, fs: Dir, user: User) -> None:
     """Command invocation: cp [from:string] [to:string]
 
     [EXTEND]
-    cp - copy file or folder from the first specified path to the second
+    cp - copies file or directory form 1 path to another
     """
     fs.cp(user, from_path.split("/"), to_path.split("/"))
 
@@ -172,7 +165,7 @@ def mv(from_path: str, to_path: str, fs: Dir, user: User) -> None:
     mv - moves file or directory form 1 path to another.
     it can be used to rename directories
     """
-    fs.getFile(user, file.split("/")).decrypt(user, password, mode)
+    fs.mv(user, from_path.split("/"), to_path.split("/"))
 
 
 @add_function(("help", "h"), "user_input", "term")
@@ -187,24 +180,11 @@ def help_function(name: Optional(str, None), term: Terminal, donotextend: Flag(F
         print_box("commands", user_commands.keys(), term)
         return
 
+    to_print = get_command_doc(name).split("[EXTEND]")
+    print_box('helper', to_print[0].split("\n"), term)
 
-@add_function(("devresetintro", ))
-def dev_reset():
-    """replace docstring if you want help for this function"""
-    # script_dir = os.path.dirname(__file__)
-    # script_dir = script_dir.replace('functions/', '') it will crash without argumnts
-    with open(MAIN_PATH + 'first_game.txt', 'w') as firstgamefile:
-        firstgamefile.truncate()
-        firstgamefile.write('0')
-
-
-@add_function(("dir", "ls"), "fs", "user", "term")
-def ls(fs, user, term):
-    """ls
-    [EXTEND]
-    ls - list files and sub-directories in current directory
-    """
-    print_box("Files", fs.stringList(user), term)
+    if donotextend:
+        print_box('helper', to_print[1].strip().split('\n'), term)
 
 
 @add_function(("encrypt", "enc"), "user_input", "fs", "user")
@@ -213,7 +193,7 @@ def user_encrypt(file: str, password: encode, fs: Dir, user: User, mode: Keyword
     """Command invocation: encrypt [file:string] [password:string or int(mode 3)] [mode:int default 2]
 
     [EXTEND]
-    encrypt - encrypt file using 1 of 4 encryption algorithms
+    encrypt - encrypts file using 1 of 4 encryption algoritms
     """
     fs.getFile(user, file.split("/")).encrypt(user, password, mode)
 
@@ -222,10 +202,11 @@ def user_encrypt(file: str, password: encode, fs: Dir, user: User, mode: Keyword
 @expand_args(0, "phrashe", "password", "mode")
 def encryptword(phrashe: encode, password: encode, term: Terminal, mode: Keyword(int) = 2) -> None:
     """Command invocation: encrypt [phrashe:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
-    encryptword - encrypt phrase using 1 of 4 encryption algorithms and print result
+    encryptword - encrypts phrahse using 1 of 4 encryption algoritms and prints it back to user
     """
-    echo(list(map(int, encrypt(phrase, password, mode=mode))), term)
+    echo(list(map(int, encrypt(phrashe, password, mode=mode))), term)
 
 
 @add_function(("decrypt", "dec"), "user_input", "fs", "user")
@@ -243,69 +224,22 @@ def decrypt(file: str, password: encode, fs: Dir, user: User, mode: Keyword(int)
 @expand_args(0, "file", "password", "mode")
 def decryptread(file: str, password: encode, fs: Dir, user: User, term: Terminal, mode: Keyword(int) = 2) -> None:
     """Command invocation: decryptread [file:string] [password:string or int(mode 3)] [mode:int default 2]
+
     [EXTEND]
-    ipscan - decypher the specified IP to words
+    decryptread - decrypts file using 1 of 4 decrytpion algorithms and prints result
     """
-    retstring = ''
-    list_letters = list(string.ascii_letters)
-    ip = user_input  # Change to 0?
-    ip_no_dots = ip.replace('.', '')
-    range_num = len(ip_no_dots)
-    for i in range(0, range_num, 1):
-        try:
-            num1, num2 = ip_no_dots[i], ip_no_dots[i+1]
-        except IndexError:
-            pass
-        else:
-            chr_this = int(int(num1 + num2) + 40)
-            letter = chr(chr_this)
-            if letter in list_letters:
-                if i % 2 == 0:
-                    retstring += letter
-    print_box('IP Scan', [f'IP: "{ip}"', 'decyphers to: ', f"{retstring}"], term)
-    OSlog.append(f"unknown user: , IP: {ip} decyphers to: {retstring},")
+    print_box('decrypted', fs.getFile(user, file.split("/")).decrypt(user, password, mode), term)
 
 
 @add_function(("cat", "read"), "user_input", "fs", "user", 'term')
 @expand_args(0, "file", "bin")
 def read(file: str, fs: Dir, user: User, term: Terminal, bin: Flag(True) = False) -> None:
     """Command invocation: read [file:string] [mode:text]
+
     [EXTEND]
-    ipsearch - Search the system for attackable IPs
+    read - reads file using binary(bin) or text(text) modes
     """
-    hint = gethint()
-    hintlist = hint.split()
-    hintlist = ipcypher(hintlist)
-    for item in hintlist:
-        random_int = random.randint(1, 2)
-        for i in range(random_int):
-            randip = str(f"{random.randint(100,99999)}.{random.randint(1000,9999)}\
-                .{random.randint(100,9999)}.{random.randint(1,999)}")
-            clear_term(term)
-            print_box('Found IP', ['Scanning:', randip, 'Not Attackable'], term)
-            time.sleep(0.5)
-        clear_term(term)
-        print_box('Found IP', ['Scanning:', item, 'Attackable'], term)
-        time.sleep(0.5)
-        if random_int == 1:
-            randip = str(f"{random.randint(100,99999)}.{random.randint(1000,9999)}\
-                .{random.randint(100,9999)}.{random.randint(1,999)}")
-            clear_term(term)
-            print_box('Found IP', ['Scanning:', randip, 'Not Attackable'], term)
-            time.sleep(0.5)
-    time.sleep(0.5)
-    randip = str(f"{random.randint(100,99999)}.{random.randint(1000,9999)}\
-        .{random.randint(100,9999)}.{random.randint(1, 999)}")
-    clear_term(term)
-    print_box('Found IP', ['Scanning:', randip, 'Not Attackable'], term)
-    time.sleep(1)
-    printlist = []
-    for item in hintlist:
-        printlist.append(item)
-    clear_term(term)
-    printlist.append('You can scan these IPs by using "ipscan [ip]!"')
-    print_box('Found IP', printlist, term)
-    OSlog.append("unknown user: performed IP search,")
+    print_box("read", [fs.getFile(user, file.split("/")).read(user, bin)], term)
 
 
 @add_function(("write", ), "user_input", "fs", "user")
@@ -336,8 +270,9 @@ def search_back(what: str, walk: list, piervous: str) -> list:
 @expand_args(0, "what", 'path')
 def search(what: str, path: str, fs: Dir, rootfs: Dir, user: User, term: Terminal) -> None:
     """Command invocation: search [name:string] [path]
+
     [EXTEND]
-    mdkir - create directory with the specified path
+    search - searches for file that contains name in it's name
     """
     "search [name]"
 
@@ -424,7 +359,6 @@ def remove_vulnerabillity(vulnerability: Any) -> None:
         pass
 
 
-
 @add_function(("morse", ), "user_input", 'term')
 @expand_args(0, "user_input")
 def morsescan(user_input: str, term: Terminal) -> None:
@@ -452,7 +386,7 @@ def morsescan(user_input: str, term: Terminal) -> None:
             if new_msg[j] in morse_dict.keys():
                 dec_msg.append(morse_dict[new_msg[j]])
 
-        print_box("Morse Scan", ["Decoded Message is: " + ''.join(dec_msg)], term)  # end the infinite while loop
+        print_box("morsescan", ["Decoded Message is: " + ''.join(dec_msg)], term)  # end the infinite while loop
         OSlog.append("unknown user: Decoded Message is: " + ''.join(dec_msg) + ",")
         break
 
@@ -460,6 +394,7 @@ def morsescan(user_input: str, term: Terminal) -> None:
 @add_function(("vscan", ), 'term')
 def hint(term: Terminal) -> None:
     """Command invocation: vscan
+
     [EXTEND]
     vscan - scans for vulnerabilities in network
     """
@@ -558,8 +493,9 @@ def ipsearch(term: Terminal) -> None:
 @expand_args(0, "user_input")
 def ipscan(user_input: str, term: Terminal) -> None:
     """Command invocation: ipscan [ip]
+
     [EXTEND]
-    mv - move file or folder from the first specified path to the second; can be used to rename directories
+    ipscan - decyphers a ip to words
     """
     retstring = ''
     list_letters = list(string.ascii_letters)
@@ -601,9 +537,9 @@ def passwordscan(term: Terminal) -> None:
     pwlist = ['df23jsq', 'qsAtom5', 'LQR', "1234567", "54354fd32", "444hdFAaws", "guuf2321d"]
     all1 = list(string.ascii_letters + string.digits)
     this_will_be_stupid = []
-    print_box('Password Scanner', ['Scanning operating system...',
-                                  'Scanning file system...',
-                                  'Scanning for passwords...'], term)
+    print_box('PasswordScanner', ['Getting Operating System...',
+                                  'Filtring FileSystem...',
+                                  'Scanning for Passwords...'], term)
     time.sleep(2)
     clear_term(term)
     for item in pwlist:
@@ -613,10 +549,10 @@ def passwordscan(term: Terminal) -> None:
                 choiceg += random.choice(all1)
             for items in this_will_be_stupid:
                 print_box(items[0], items[1], term)
-            print_box('Password Scanner', ['Found Password', choiceg, str('█'*i + '_'*int(5-i))], term)
+            print_box('PasswordScanner', ['Found Password', choiceg, str('█'*i + '_'*int(5-i))], term)
             time.sleep(0.3)
             clear_term(term)
-        this_will_be_stupid.append(['Password Scanner', ['Found Password', item]])
+        this_will_be_stupid.append(['PasswordScanner', ['Found Password', item]])
         # print_box('PasswordScanner', ['Found Password', item])
         for items in this_will_be_stupid:
             print_box(items[0], items[1], term)
@@ -625,7 +561,7 @@ def passwordscan(term: Terminal) -> None:
     lollist = ['Found Passwords:']
     for item in pwlist:
         lollist.append(item)
-    print_box('Password Scanner', lollist, term)
+    print_box('PasswordScanner', lollist, term)
 
 
 @add_function(('su', 'switchuser'), 'user_input', 'user', 'Users')
@@ -687,8 +623,7 @@ def chadd(path: str, up: int, op: int, user: User, fs: Dir) -> None:
     path = path.split('/')
     fs.get(user, path[:-1]).chadd(user, path[-1], up, op)
 
-    if len(result) == 0:
-        raise NoSuchFileOrDirectory
+
 @add_function(('chown', 'changeowner'), 'user_input', 'user', 'Users', 'fs')
 @expand_args(0, 'path', 'name')
 def chown(path: str, name: str, user: User, users: list, fs: Dir) -> None:
@@ -727,14 +662,6 @@ def clear(term: Terminal) -> None:
     clear_term(term)
 
 
-@add_function(("tree", ), 'fs', 'user', "term")
-def dir_cat(fs, user, term):
-    """dir
-    [EXTEND]
-    dir - print directory tree
-    """
-    print_tree("dir", fs, user, term)
-
 @add_function(("tutorial", "t"), "user_input", 'term')
 @expand_args(0, "user_input")
 def tutorial(user_input: Optional(int, None), term: Terminal) -> None:
@@ -744,52 +671,49 @@ def tutorial(user_input: Optional(int, None), term: Terminal) -> None:
     tutorial - displays specified tutorial page
     """
     if user_input is None or user_input == 1:
-        print_box("Tutorial", [
-            "Tutorial 1: Getting around the OS (1/4)",
-            "---------------------",
-            "help - list all commands",
-            "help (command) - help on specified command",
-            "tree - show the full file system",
-            "cd - move into a different directory",
-            "dir - show directories",
-            "search (filename) - search the OS for specified items",
-            "---------------------",
-            'Type "t 2" for tutorial 2/4'], term)
+        print_box("tutorial", [
+                  "help 1: getting around the os (1/4)",
+                  "---------------------",
+                  'there are multiple help menus try "help 2"',
+                  "---------------------",
+                  "tree - lets you see the full file system",
+                  "cd - will let you move into a new directorly",
+                  "dir - will let you see a list of directories you can cd into",
+                  "search (input) - lets you search the operating system for specific files."], term)
     else:
         if user_input == 2:
-            print_box("Tutorial", [
-                "Tutorial 2: Files (2/4)",
-                "---------------------",
-                "read (filename) - read files in the current directory",
-                "write (filename) (content) - add content into file",
-                "touch (filename) - create a new file",
-                "mkdir (name) - make a new directory in current path",
-                "---------------------",
-                'Type "t 3" for tutorial 3/4'], term)
+            print_box("tutorial", [
+                      "help 2: files (2/4)",
+                      "---------------------",
+                      'there are multiple help menus try "help 3"',
+                      "---------------------",
+                      "read (filename) - will let you read files you must be in the same directory first",
+                      "write (filename (content) - will let you add info into files",
+                      "touch (filename) - creates a new file",
+                      "mkdir (name) - makes a new directory in current path",
+                      "help - will list all commands",
+                      "help (command name) - shows the inputs in the command and explains it"], term)
         elif user_input == 3:
-            print_box("Tutorial", [
-                "Tutorial 3: Hacking tools (3/4)",
-                "---------------------",
-                "decrypt (file) (password) - make files readable",
-                "morse (code) - translate morse code from 1 and 0 to English alphabets and numbers",
-                "scans:",
-                "pwscan - search for insecure passwords stored in logs",
-                "ipsearch - search for IPs connected to the OS",
-                "ipscan (IP)- scan the specifed IP for information",
-                "portscan - list open ports",
-                "portscan (port ID) - scan the specified port for information",
-                "---------------------",
-                'Type "t 4" for tutorial 4/4'], term)
+            print_box("tutorial", [
+                      "help 3: hacking (3/4)",
+                      "---------------------",
+                      'you have alot of hacking tools at your disposal',
+                      "---------------------",
+                      "decrypt (file) (password) - used to make files readable",
+                      "scans:",
+                      "pwscan - attempts to find insecure passwords stored in logs",
+                      "ipsearch - attempts to list connect ips to the operating system",
+                      "ipscan (ip)- scans a specific ip to find out more information",
+                      "portscan - lists open ports",
+                      "portscan (port id) - scans port to find out more information",
+                      "morse (code) - translates morse code from 1 and 0 to english"], term)
         else:
-            print_box("Tutorial", [
-                "Tutorial 4: Advanced (4/4)",
-                "---------------------",
-                "logs - track actions performed on the OS",
-                "rm (filename) - remove files or directories (warning: cannot be undone)",
-                "cp - copy file",
-                "---------------------",
-                'Type "h" for help'
-            ], term)
+            print_box("tutorial", [
+                      "help 4: advanced (4/4)",
+                      "---------------------",
+                      "logs - lets you track actions performed on the operating system",
+                      "rm (name) - remove files or directories (warning: no way to revert)",
+                      "cp - lets you copy a file"], term)
 
 
 @add_function(("shutdown", ), "user_input", "term", 'user')
@@ -810,4 +734,3 @@ def shutdown(user_input: str, term: Terminal, user: User) -> None:
         exit()
     else:
         print_box("SHUTDOWN", ["MISSING ROOT PRIVILAGE OR INCORRECT PASSWORD"], term)
-
