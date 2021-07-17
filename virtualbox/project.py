@@ -16,7 +16,7 @@ from users.uid import Uidspace
 from users.user import ROOT, User
 
 
-def playbgm(term: Terminal) -> None:
+def playbgm() -> None:
     """Plays music"""
     try:
         playsound('music/bgm_part01.mp3', block=False)
@@ -25,7 +25,7 @@ def playbgm(term: Terminal) -> None:
             playsound('music/bgm_part02.mp3', block=False)
             sleep(16)
     except NotImplementedError:
-        echo("cannot play music on this platform", term)
+        pass
 
 
 # file system imports
@@ -40,7 +40,7 @@ term = Terminal()
 
 
 def ProcessArgs(functionArgs: tuple, argsDicit: dict) -> list:
-    """Procceses functions argumens to allow fro 'imports'"""
+    """Procceses functions argumens to allow 'imports'"""
     try:
         return [argsDicit[i] for i in functionArgs]
     except KeyError:
