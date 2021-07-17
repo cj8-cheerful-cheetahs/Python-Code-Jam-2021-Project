@@ -1,12 +1,17 @@
+from __future__ import annotations
+
 import copy
 import os
 import shutil
-from typing import Type, Union
+from typing import TYPE_CHECKING, Type, Union
 
 from virtualbox.cryptology import decrypt, encrypt
 from virtualbox.exceptions import CannotReadFileInTextMode
 
 from .fs_ac import AC
+
+if TYPE_CHECKING:
+    from virtualbox.users.user import User
 
 
 class File(AC):
@@ -72,12 +77,15 @@ class File(AC):
         self.write(user, decrypt(self.read(user, True), password, mode=mode), True)
 
     def decryptRead(self, user: Type['User'], password: bytes, mode: int = 2) -> bytes:
+        """Decrypts contenct of the file and returns it with given password"""
         return decrypt(self.read(user, True), password, mode=mode)
 
     "self managment"
     def delete(self) -> None:
+        """Deletes self"""
         os.remove(self.path)
 
     def create(self) -> None:
+        """Creates self"""
         with open(self.path, "wb") as f:
             f.write(b"")

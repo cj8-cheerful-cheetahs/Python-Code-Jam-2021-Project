@@ -92,10 +92,17 @@ def cd(path: str, fs: Dir, user: User, term: Terminal, rootfs: Dir) -> None:
     [EXTEND]
     cd - change directory to specified path
     """
+    tmp = None
     if path[0] == '/':
-        fs.copy(rootfs.getDir(user, path[1:].split("/")))
+        tmp = rootfs.getDir(user, path[1:].split("/"))
     else:
-        fs.copy(fs.getDir(user, path.split("/")))
+        tmp = fs.getDir(user, path.split("/"))
+
+    if tmp.p_check(4, user):
+        fs.copy(tmp)
+    else:
+        raise PermisionDenied()
+
     print_box("getdir", fs.stringList(user), term)
 
 
@@ -181,10 +188,12 @@ def help_function(name: Optional(str, None), term: Terminal, donotextend: Flag(F
         return
 
     to_print = get_command_doc(name).split("[EXTEND]")
-    print_box('helper', to_print[0].split("\n"), term)
-
     if donotextend:
-        print_box('helper', to_print[1].strip().split('\n'), term)
+        to_print = to_print[0] + to_print[1]
+    else:
+        to_print = to_print[0]
+
+    print_box('helper', to_print.split("\n"), term)
 
 
 @add_function(("encrypt", "enc"), "user_input", "fs", "user")
@@ -569,7 +578,7 @@ def passwordscan(term: Terminal) -> None:
 def su(user: str, password: Optional(encode, None), me: User, users: list) -> None:
     """Command invocation: su [user:str] [password:str]
 
-    [EXPAND]
+    [EXTEND]
     su - swtiches current user to provideduser
     """
     if user in users:
@@ -588,7 +597,7 @@ def su(user: str, password: Optional(encode, None), me: User, users: list) -> No
 def listusers(users: list, term: Terminal) -> None:
     """Command invocation: listusers
 
-    [EXPAND]
+    [EXTEND]
     listusers - list system users
     """
     print_box('users', users.keys(), term)
@@ -599,7 +608,7 @@ def listusers(users: list, term: Terminal) -> None:
 def chmod(path: str, up: int, op: int, user: User, fs: Dir) -> None:
     """Command invocation:c hadd [path: str] [userpermmisions: int] [otherspermisions: int]
 
-    [EXPAND]
+    [EXTEND]
     chadd - sets permisions of diectory/files with specified path
     4 = read
     2 = write
@@ -614,7 +623,7 @@ def chmod(path: str, up: int, op: int, user: User, fs: Dir) -> None:
 def chadd(path: str, up: int, op: int, user: User, fs: Dir) -> None:
     """Command invocation: chadd [path: str] [userpermmisions: int] [otherspermisions: int]
 
-    [EXPAND]
+    [EXTEND]
     chadd - permorms binary or on permisions of diectory/files with specified path
     4 = read
     2 = write
@@ -629,7 +638,7 @@ def chadd(path: str, up: int, op: int, user: User, fs: Dir) -> None:
 def chown(path: str, name: str, user: User, users: list, fs: Dir) -> None:
     """Command invocation: chown [path:str] [name:str]
 
-    [EXPAND]
+    [EXTEND]
     chown - changes owner of file/directory to user of specified name
     """
     path = path.split('/')
@@ -644,7 +653,7 @@ def chown(path: str, name: str, user: User, users: list, fs: Dir) -> None:
 def showpermisions(path: str, fs: Dir, term: Terminal, ROOT: User) -> None:
     """Command invocation: showp [path:str]
 
-    [EXPAND]
+    [EXTEND]
     showp - prints file/directory permisons
     """
     path = path.split('/')
@@ -656,7 +665,7 @@ def showpermisions(path: str, fs: Dir, term: Terminal, ROOT: User) -> None:
 def clear(term: Terminal) -> None:
     """Command invocation: clear - clears screen
 
-    [EXPAND]
+    [EXTEND]
     what do you expect here? thats it
     """
     clear_term(term)
@@ -667,7 +676,7 @@ def clear(term: Terminal) -> None:
 def tutorial(user_input: Optional(int, None), term: Terminal) -> None:
     """Command invocation: tutorial [page:int default 1]
 
-    [EXPAND]
+    [EXTEND]
     tutorial - displays specified tutorial page
     """
     if user_input is None or user_input == 1:
@@ -721,7 +730,7 @@ def tutorial(user_input: Optional(int, None), term: Terminal) -> None:
 def shutdown(user_input: str, term: Terminal, user: User) -> None:
     """Command invocation: shutdown
 
-    [EXPAND]
+    [EXTEND]
     shutdown - shutsdown system
     """
     if user_input == "AtomicProgramIranShutdown" and user.uid == 0:

@@ -63,5 +63,5 @@ class AC(copy):
         def check(self: 'AC', user: User, *args: Any) -> Any:
             if self.p_check(4, user) or user.uid == 0:
                 return function(self, user, *args)
-            return PermisionDenied()
+            raise PermisionDenied()
         return check
