@@ -4,10 +4,10 @@ from time import sleep
 
 from blessed import Terminal
 
-from .config import START_PATH
-from .exceptions import CannotFullFillFunction
-from .fs.fs_dir import Dir
-from .functions.blessed_functions import (
+from virtualbox.config import START_PATH
+from virtualbox.exceptions import CannotFullFillFunction
+from virtualbox.fs.fs_dir import Dir
+from virtualbox.functions.blessed_functions import (
     clear_term, echo, print_box, print_loading, print_tree, request
 )
 from functions.command_functions import get_entry
@@ -19,10 +19,10 @@ from shutil import copytree, rmtree
 from os import getcwd
 
 
-from .functions.command_functions import get_entry
-from .users.login import login
-from .users.uid import Uidspace
-from .users.user import ROOT, User
+from virtualbox.functions.command_functions import get_entry
+from virtualbox.users.login import login
+from virtualbox.users.uid import Uidspace
+from virtualbox.users.user import ROOT, User
 
 
 
@@ -33,8 +33,6 @@ def playbgm():
     while True:
         playsound('music/bgm_part02.mp3', block=False)
         sleep(16)
-
-
 
 # file system imports
 fs = Dir.FromPath(START_PATH, None, 7, 5, 0)
@@ -62,11 +60,12 @@ def user_input_cmd(fs: Dir, user: User, rootfs: Dir, term: Terminal) -> None:
         user_input = request(">>>  ", term).strip().split()
         if len(user_input) == 0:
             continue
-        # try:
-        clear_term(term)
-        entry = get_entry(user_input[0])
-        entry[0](*ProcessArgs(entry[1], {**locals(), **globals()}))
-        # except Exception as e:
+        try:
+            clear_term(term)
+            entry = get_entry(user_input[0])
+            entry[0](*ProcessArgs(entry[1], {**locals(), **globals()}))
+        except Exception as e:
+            echo(e, term)
 
 
 
